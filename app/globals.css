@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  background: #f5ecd7;
+  color: #1a1410;
+  font-family: Georgia, 'Times New Roman', serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-ink bg-ink px-6 py-3 text-cream font-semibold tracking-wide uppercase shadow-[4px_4px_0_0_#1a1410] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_0_#1a1410];
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-ink bg-cream px-6 py-3 text-ink font-semibold tracking-wide uppercase shadow-[4px_4px_0_0_#1a1410] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0_0_#1a1410];
+  }
+  .btn:disabled,
+  .btn-ghost:disabled {
+    @apply opacity-40 cursor-not-allowed shadow-none active:translate-x-0 active:translate-y-0;
+  }
+  .card {
+    @apply rounded-2xl border-2 border-ink bg-cream shadow-[6px_6px_0_0_#1a1410];
+  }
+  .label {
+    @apply text-xs uppercase tracking-[0.2em] font-bold text-ink/60;
+  }
+  .voice-chip {
+    @apply inline-flex items-center justify-center rounded-full border-2 border-ink px-3 py-1 text-sm font-bold uppercase tracking-wider;
+  }
+  .voice-Tenor {
+    @apply bg-tenor text-ink;
+  }
+  .voice-Lead {
+    @apply bg-lead text-cream;
+  }
+  .voice-Bari {
+    @apply bg-bari text-cream;
+  }
+  .voice-Bass {
+    @apply bg-bass text-cream;
+  }
+}
+
+.stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    #1a1410,
+    #1a1410 2px,
+    transparent 2px,
+    transparent 14px
+  );
+}
+
+@keyframes wobble {
+  0%, 100% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+}
+.wobble {
+  animation: wobble 3s ease-in-out infinite;
+}

@@ -22,7 +22,7 @@ function isPhase(x: unknown): x is Phase {
 
 export async function GET(_req: Request, ctx: { params: Promise<{ code: string }> }) {
   const { code } = await ctx.params;
-  const session = getSession(code);
+  const session = await getSession(code);
   if (!session) return NextResponse.json({ error: 'not found' }, { status: 404 });
   return NextResponse.json({ session });
 }
@@ -41,19 +41,19 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ code: string 
   switch (action) {
     case 'join': {
       const name = typeof body.name === 'string' ? body.name.slice(0, 40) : '';
-      session = joinSession(code, id, name);
+      session = await joinSession(code, id, name);
       break;
     }
     case 'setVoices': {
       const voices = Array.isArray(body.voices) ? body.voices.filter(isVoice) : [];
-      session = setVoices(code, id, voices);
+      session = await setVoices(code, id, voices);
       break;
     }
     case 'setVote': {
       const tagId = body.tagId == null ? null : Number(body.tagId);
       const tag =
         body.tag && typeof body.tag === 'object' ? (body.tag as Tag) : undefined;
-      session = setVote(code, id, tagId, tag);
+      session = await setVote(code, id, tagId, tag);
       break;
     }
     case 'claimVoice': {
@@ -61,7 +61,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ code: string 
       if (voice === undefined) {
         return NextResponse.json({ error: 'bad voice' }, { status: 400 });
       }
-      session = claimVoice(code, id, voice);
+      session = await claimVoice(code, id, voice);
       break;
     }
     case 'setPhase': {
@@ -77,11 +77,11 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ code: string 
           : body.currentTag && typeof body.currentTag === 'object'
             ? (body.currentTag as Tag)
             : undefined;
-      session = setPhase(code, id, body.phase, { candidateTags, currentTag });
+      session = await setPhase(code, id, body.phase, { candidateTags, currentTag });
       break;
     }
     case 'leave': {
-      session = removeParticipant(code, id);
+      session = await removeParticipant(code, id);
       if (!session) return NextResponse.json({ ok: true });
       break;
     }

@@ -44,6 +44,7 @@ export function Singing({
     return m;
   }, [session.participants]);
 
+  const tagId = tag?.id ?? null;
   useEffect(() => {
     const allEl = allPartsRef.current;
     const pauseAllVoices = () => {
@@ -54,7 +55,7 @@ export function Singing({
       pauseAllVoices();
     };
 
-    if (!tag || !mode) {
+    if (!mode) {
       pauseAll();
       setPlaying(false);
       return;
@@ -79,7 +80,7 @@ export function Singing({
     for (const v of VOICES) {
       const el = voiceRefs.current[v];
       if (!el) continue;
-      if (activeVoices.includes(v) && tag.voiceTracks[v]) {
+      if (activeVoices.includes(v)) {
         el.currentTime = 0;
         el.play().catch(() => {});
       } else {
@@ -87,7 +88,8 @@ export function Singing({
       }
     }
     setPlaying(true);
-  }, [tag, mode, myVoice]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, myVoice, tagId]);
 
   if (!tag || !myVoice) {
     return (

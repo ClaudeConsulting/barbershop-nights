@@ -25,8 +25,15 @@ export function Singing({
 }) {
   const tag = session.currentTag;
   const myVoice = me.assignedVoice;
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [mode, setMode] = useState<'mine' | 'all' | null>(null);
+  const allPartsRef = useRef<HTMLAudioElement | null>(null);
+  const voiceRefs = useRef<Record<Voice, HTMLAudioElement | null>>({
+    Tenor: null,
+    Lead: null,
+    Bari: null,
+    Bass: null,
+  });
+  type Mode = Voice | 'all' | 'minus' | null;
+  const [mode, setMode] = useState<Mode>(null);
   const [playing, setPlaying] = useState(false);
 
   const byVoice = useMemo(() => {
@@ -37,29 +44,50 @@ export function Singing({
     return m;
   }, [session.participants]);
 
-  const audioSrc = useMemo(() => {
-    if (!tag) return null;
-    if (mode === 'mine' && myVoice) {
-      const src = tag.voiceTracks[myVoice];
-      return src ? PROXY(src) : null;
-    }
-    if (mode === 'all' && tag.allParts) return PROXY(tag.allParts);
-    return null;
-  }, [tag, mode, myVoice]);
-
   useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
-    if (!audioSrc) {
-      el.pause();
+    const allEl = allPartsRef.current;
+    const pauseAllVoices = () => {
+      for (const v of VOICES) voiceRefs.current[v]?.pause();
+    };
+    const pauseAll = () => {
+      allEl?.pause();
+      pauseAllVoices();
+    };
+
+    if (!tag || !mode) {
+      pauseAll();
+      setPlaying(false);
       return;
     }
-    el.src = audioSrc;
-    el.currentTime = 0;
-    el.play()
-      .then(() => setPlaying(true))
-      .catch(() => setPlaying(false));
-  }, [audioSrc]);
+
+    if (mode === 'all') {
+      pauseAllVoices();
+      if (!allEl) return;
+      allEl.currentTime = 0;
+      allEl.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+      return;
+    }
+
+    allEl?.pause();
+    const activeVoices: Voice[] =
+      mode === 'minus' && myVoice
+        ? VOICES.filter((v) => v !== myVoice)
+        : mode === 'minus'
+          ? [...VOICES]
+          : [mode];
+
+    for (const v of VOICES) {
+      const el = voiceRefs.current[v];
+      if (!el) continue;
+      if (activeVoices.includes(v) && tag.voiceTracks[v]) {
+        el.currentTime = 0;
+        el.play().catch(() => {});
+      } else {
+        el.pause();
+      }
+    }
+    setPlaying(true);
+  }, [tag, mode, myVoice]);
 
   if (!tag || !myVoice) {
     return (
@@ -71,9 +99,11 @@ export function Singing({
 
   const voiceColor = voiceBg(myVoice);
   const voiceFg = myVoice === 'Tenor' ? '#1a1410' : '#f5ecd7';
+  const minusAvailable = VOICES.filter((v) => v !== myVoice).every(
+    (v) => !!tag.voiceTracks[v],
+  );
 
   function stop() {
-    audioRef.current?.pause();
     setMode(null);
     setPlaying(false);
   }
@@ -148,42 +178,116 @@ export function Singing({
             </div>
           </div>
         ) : null}
+
+        {tag.notationAlt || tag.notation ? (
+          <div className="card p-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="label">MuseScore file</p>
+              <p className="text-xs text-ink/60 mt-1">
+                Open in MuseScore to edit, transpose, or play back.
+              </p>
+            </div>
+            <a
+              className="btn-ghost whitespace-nowrap"
+              href={tag.notationAlt ?? tag.notation ?? '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              ↓ .mscz
+            </a>
+          </div>
+        ) : null}
       </section>
 
-      <audio ref={audioRef} onEnded={() => setPlaying(false)} preload="none" />
+      <audio
+        ref={allPartsRef}
+        src={tag.allParts ? PROXY(tag.allParts) : undefined}
+        onEnded={() => mode === 'all' && stop()}
+        preload="none"
+      />
+      {VOICES.map((v) => (
+        <audio
+          key={v}
+          ref={(el) => {
+            voiceRefs.current[v] = el;
+          }}
+          src={tag.voiceTracks[v] ? PROXY(tag.voiceTracks[v]!) : undefined}
+          onEnded={() => mode === v && stop()}
+          preload="none"
+        />
+      ))}
 
       <div className="fixed bottom-0 left-0 right-0 border-t-4 border-ink bg-cream p-3 md:p-4">
-        <div className="max-w-3xl mx-auto flex items-center gap-2 flex-wrap">
+        <div className="max-w-3xl mx-auto flex flex-col gap-2">
+          <div className="grid grid-cols-5 gap-2">
+            {VOICES.map((v) => {
+              const has = !!tag.voiceTracks[v];
+              const active = mode === v && playing;
+              const mine = v === myVoice;
+              return (
+                <button
+                  key={v}
+                  onClick={() => (active ? stop() : setMode(v))}
+                  disabled={!has}
+                  title={mine ? `Your part (${v})` : v}
+                  className={`rounded-xl border-2 border-ink p-2 font-bold uppercase tracking-wider text-xs md:text-sm transition-all ${
+                    active
+                      ? `voice-${v} shadow-[3px_3px_0_0_#1a1410]`
+                      : has
+                        ? `voice-${v} opacity-70 hover:opacity-100`
+                        : 'bg-cream text-ink/30'
+                  } ${mine ? 'ring-4 ring-ink ring-offset-1 ring-offset-cream' : ''}`}
+                >
+                  {active ? '■' : '▶'} {v}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => (mode === 'all' && playing ? stop() : setMode('all'))}
+              disabled={!tag.allParts}
+              className={`rounded-xl border-2 border-ink p-2 font-bold uppercase tracking-wider text-xs md:text-sm ${
+                mode === 'all' && playing
+                  ? 'bg-ink text-cream shadow-[3px_3px_0_0_#1a1410]'
+                  : tag.allParts
+                    ? 'bg-cream hover:bg-white'
+                    : 'bg-cream text-ink/30'
+              }`}
+            >
+              {mode === 'all' && playing ? '■ All' : '▶ All'}
+            </button>
+          </div>
           <button
-            className="btn-ghost flex-1"
-            onClick={() => (mode === 'mine' && playing ? stop() : setMode('mine'))}
-            disabled={!tag.voiceTracks[myVoice]}
+            onClick={() => (mode === 'minus' && playing ? stop() : setMode('minus'))}
+            disabled={!minusAvailable}
+            title={`Play everyone except ${myVoice} — sing your part along`}
+            className={`rounded-xl border-2 border-ink p-2 font-bold uppercase tracking-wider text-xs md:text-sm ${
+              mode === 'minus' && playing
+                ? 'bg-ink text-cream shadow-[3px_3px_0_0_#1a1410]'
+                : minusAvailable
+                  ? 'bg-cream hover:bg-white'
+                  : 'bg-cream text-ink/30'
+            }`}
           >
-            {mode === 'mine' && playing ? `■ Stop ${myVoice}` : `▶ My part (${myVoice})`}
-          </button>
-          <button
-            className="btn-ghost flex-1"
-            onClick={() => (mode === 'all' && playing ? stop() : setMode('all'))}
-            disabled={!tag.allParts}
-          >
-            {mode === 'all' && playing ? '■ Stop' : '▶ All parts'}
+            {mode === 'minus' && playing
+              ? `■ Practice (everyone but ${myVoice})`
+              : `▶ Practice (everyone but ${myVoice})`}
           </button>
           {isHost ? (
-            <button
-              className="btn"
-              onClick={() => api.setPhase('assignment')}
-              title="Reassign voices"
-            >
-              Reassign
-            </button>
-          ) : null}
-          {isHost ? (
-            <button
-              className="btn-ghost"
-              onClick={() => api.setPhase('lobby', { currentTag: null, candidateTags: [] })}
-            >
-              New tag
-            </button>
+            <div className="flex gap-2 justify-end">
+              <button
+                className="btn-ghost text-xs"
+                onClick={() => api.setPhase('assignment')}
+                title="Reassign voices"
+              >
+                Reassign
+              </button>
+              <button
+                className="btn-ghost text-xs"
+                onClick={() => api.setPhase('lobby', { currentTag: null, candidateTags: [] })}
+              >
+                New tag
+              </button>
+            </div>
           ) : null}
         </div>
       </div>
@@ -196,22 +300,70 @@ function voiceBg(v: Voice): string {
 }
 
 function SheetMusic({ tag }: { tag: Tag }) {
-  const candidates = [tag.sheetMusicAlt, tag.sheetMusic].filter(
-    (u): u is string => !!u,
-  );
-  const [idx, setIdx] = useState(0);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
-    setIdx(0);
+    setFailed(false);
   }, [tag.id]);
-  if (candidates.length === 0 || idx >= candidates.length) {
-    return <p className="p-6 text-center text-ink/50">No sheet music available.</p>;
+
+  const isPdf =
+    tag.sheetMusicType === 'pdf' ||
+    (tag.sheetMusicAlt?.toLowerCase().endsWith('.pdf') ?? false);
+  const candidates = (isPdf
+    ? [tag.sheetMusic, tag.sheetMusicAlt]
+    : [tag.sheetMusicAlt, tag.sheetMusic]
+  ).filter((u): u is string => !!u);
+
+  if (candidates.length === 0 || failed) {
+    return (
+      <div className="p-6 text-center text-ink/50 flex flex-col gap-2">
+        <p>Sheet music unavailable inline.</p>
+        {candidates.length > 0 ? (
+          <a
+            className="btn-ghost self-center"
+            href={candidates[0]}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open on barbershoptags.com
+          </a>
+        ) : null}
+      </div>
+    );
   }
+
+  const src = `/api/media?kind=sheet&urls=${candidates
+    .map((u) => encodeURIComponent(u))
+    .join(',')}`;
+
+  if (isPdf) {
+    return (
+      <object
+        data={src}
+        type="application/pdf"
+        className="w-full rounded-lg"
+        style={{ height: '80vh' }}
+      >
+        <div className="p-6 text-center text-ink/50 flex flex-col gap-2">
+          <p>Your browser can&apos;t display this PDF inline.</p>
+          <a
+            className="btn-ghost self-center"
+            href={candidates[0]}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open PDF
+          </a>
+        </div>
+      </object>
+    );
+  }
+
   return (
     <img
-      src={PROXY(candidates[idx])}
+      src={src}
       alt={`${tag.title} sheet music`}
       className="w-full h-auto rounded-lg"
-      onError={() => setIdx((i) => i + 1)}
+      onError={() => setFailed(true)}
     />
   );
 }

@@ -26,9 +26,12 @@ export type Tag = {
   notes: string;
   lyrics: string;
   sheetMusic: string | null;
+  sheetMusicType: string | null;
   sheetMusicAlt: string | null;
   voiceTracks: Partial<Record<Voice, string>>;
   allParts: string | null;
+  notation: string | null;
+  notationAlt: string | null;
   videoCode: string | null;
 };
 

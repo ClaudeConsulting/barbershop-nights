@@ -27,6 +27,8 @@ type RawTag = {
   Lyrics?: string;
   SheetMusic?: { '#text'?: string; '@_type'?: string } | string;
   SheetMusicAlt?: string;
+  Notation?: { '#text'?: string; '@_type'?: string } | string;
+  NotationAlt?: string;
   AllParts?: { '#text'?: string; '@_type'?: string } | string;
   Bass?: { '#text'?: string; '@_type'?: string } | string;
   Bari?: { '#text'?: string; '@_type'?: string } | string;
@@ -54,6 +56,12 @@ function extractUrl(field: unknown): string | null {
     return v?.trim() || null;
   }
   return null;
+}
+
+function extractType(field: unknown): string | null {
+  if (!field || typeof field !== 'object') return null;
+  const t = (field as { '@_type'?: string })['@_type'];
+  return t ? t.toLowerCase() : null;
 }
 
 function toNum(v: unknown, fallback = 0): number {
@@ -90,6 +98,7 @@ function mapTag(raw: RawTag): Tag {
     notes: toStr(raw.Notes),
     lyrics: toStr(raw.Lyrics),
     sheetMusic: extractUrl(raw.SheetMusic),
+    sheetMusicType: extractType(raw.SheetMusic),
     sheetMusicAlt: toStr(raw.SheetMusicAlt) || null,
     voiceTracks: {
       Tenor: extractUrl(raw.Tenor) ?? undefined,
@@ -98,6 +107,8 @@ function mapTag(raw: RawTag): Tag {
       Bass: extractUrl(raw.Bass) ?? undefined,
     } as Partial<Record<Voice, string>>,
     allParts: extractUrl(raw.AllParts),
+    notation: extractUrl(raw.Notation),
+    notationAlt: toStr(raw.NotationAlt) || null,
     videoCode: firstVideo?.Code ? String(firstVideo.Code) : null,
   };
 }

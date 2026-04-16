@@ -143,7 +143,7 @@ export async function fetchTags(query: FetchTagsQuery): Promise<Tag[]> {
   const url = `${BASE}?${params.toString()}`;
   const res = await fetch(url, {
     headers: { 'User-Agent': 'barbershop-night/0.1' },
-    next: { revalidate: 300 },
+    next: { revalidate: 86400 },
   });
   if (!res.ok) throw new Error(`barbershoptags.com responded ${res.status}`);
   const xml = await res.text();

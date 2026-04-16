@@ -13,7 +13,7 @@ type Api = {
 
 type SortKey = 'Rating' | 'Downloaded' | 'Posted' | 'Title';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 
 export function Voting({
   session,
@@ -27,7 +27,6 @@ export function Voting({
   api: Api;
 }) {
   const [query, setQuery] = useState('');
-  const [debounced, setDebounced] = useState('');
   const [sort, setSort] = useState<SortKey>('Rating');
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(false);
@@ -36,13 +35,8 @@ export function Voting({
   const [error, setError] = useState<string | null>(null);
   const requestId = useRef(0);
 
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(query.trim()), 300);
-    return () => clearTimeout(t);
-  }, [query]);
-
   const fetchPage = useCallback(
-    async (startAt: number, reset: boolean, thisQuery: string, thisSort: SortKey) => {
+    async (startAt: number, reset: boolean, thisSort: SortKey) => {
       const myId = ++requestId.current;
       if (reset) setLoading(true);
       else setLoadingMore(true);
@@ -56,7 +50,6 @@ export function Voting({
           n: String(PAGE_SIZE),
           start: String(startAt),
         });
-        if (thisQuery) params.set('q', thisQuery);
         const res = await fetch(`/api/tags?${params.toString()}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -92,13 +85,20 @@ export function Voting({
   useEffect(() => {
     setTags([]);
     setExhausted(false);
-    fetchPage(1, true, debounced, sort);
-  }, [debounced, sort, fetchPage]);
+    fetchPage(1, true, sort);
+  }, [sort, fetchPage]);
 
   const loadMore = () => {
     if (loading || loadingMore || exhausted) return;
-    fetchPage(tags.length + 1, false, debounced, sort);
+    fetchPage(tags.length + 1, false, sort);
   };
+
+  const q = query.trim().toLowerCase();
+  const matches = (t: Tag) =>
+    !q ||
+    t.title.toLowerCase().includes(q) ||
+    t.altTitle.toLowerCase().includes(q) ||
+    t.arranger.toLowerCase().includes(q);
 
   const tally = useMemo(() => tallyVotes(session.participants), [session.participants]);
   const counts = new Map(tally.map((t) => [t.tagId, t.count]));
@@ -122,7 +122,7 @@ export function Voting({
     .map((id) => tagsById.get(id))
     .filter((t): t is Tag => !!t);
 
-  const browseList = tags.filter((t) => !votedIds.has(t.id));
+  const browseList = tags.filter((t) => !votedIds.has(t.id) && matches(t));
 
   async function vote(tag: Tag) {
     if (me.vote === tag.id) {
@@ -198,12 +198,14 @@ export function Voting({
 
         <section className="flex flex-col gap-2">
           <p className="label">
-            {debounced ? `Search: "${debounced}"` : 'Browse'}
+            {q ? `Search: "${q}" · ${browseList.length} of ${tags.length}` : 'Browse'}
             {loading ? ' · loading…' : null}
           </p>
           {error ? <p className="text-lead text-sm">{error}</p> : null}
           {!loading && browseList.length === 0 && !error ? (
-            <p className="text-ink/50 text-sm italic">No tags found.</p>
+            <p className="text-ink/50 text-sm italic">
+              {q ? 'No matches in loaded tags — try "Load more" to search wider.' : 'No tags found.'}
+            </p>
           ) : null}
           <ul className="flex flex-col gap-2">
             {browseList.map((tag) => (

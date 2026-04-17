@@ -4,6 +4,7 @@ import type { Tag, Voice } from '@/lib/types';
 import { VOICES } from '@/lib/types';
 import { Piano } from './Piano';
 import { SheetMusic } from './SheetMusic';
+import { parseWritKey } from '@/lib/piano-engine';
 
 const PROXY = (url: string) => `/api/media?url=${encodeURIComponent(url)}`;
 
@@ -18,6 +19,18 @@ export function SoloTag({ tag }: { tag: Tag }) {
   type Mode = Voice | 'all' | null;
   const [mode, setMode] = useState<Mode>(null);
   const [playing, setPlaying] = useState(false);
+  const [pianoOpen, setPianoOpen] = useState(false);
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [footerHeight, setFooterHeight] = useState(128);
+
+  useEffect(() => {
+    const el = footerRef.current;
+    if (!el) return;
+    setFooterHeight(el.offsetHeight);
+    const ro = new ResizeObserver(() => setFooterHeight(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const allEl = allPartsRef.current;
@@ -63,7 +76,7 @@ export function SoloTag({ tag }: { tag: Tag }) {
   }
 
   return (
-    <main className="min-h-dvh pb-32">
+    <main className="min-h-dvh" style={{ paddingBottom: footerHeight + 16 }}>
       <section className="px-4 md:px-6 py-6 border-b-4 border-ink bg-cream">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
           <a href="/solo" className="btn-ghost text-xs px-3 py-2">
@@ -84,8 +97,6 @@ export function SoloTag({ tag }: { tag: Tag }) {
         <div className="card p-2 overflow-hidden bg-white">
           <SheetMusic tag={tag} />
         </div>
-
-        <Piano writKey={tag.writKey} />
 
         {tag.notes ? (
           <div className="card p-4">
@@ -116,24 +127,6 @@ export function SoloTag({ tag }: { tag: Tag }) {
           </div>
         ) : null}
 
-        {tag.notationAlt || tag.notation ? (
-          <div className="card p-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="label">MuseScore file</p>
-              <p className="text-xs text-ink/60 mt-1">
-                Open in MuseScore to edit, transpose, or play back.
-              </p>
-            </div>
-            <a
-              className="btn-ghost whitespace-nowrap"
-              href={tag.notationAlt ?? tag.notation ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              ↓ .mscz
-            </a>
-          </div>
-        ) : null}
       </section>
 
       <audio
@@ -154,41 +147,67 @@ export function SoloTag({ tag }: { tag: Tag }) {
         />
       ))}
 
-      <div className="fixed bottom-0 left-0 right-0 border-t-4 border-ink bg-cream p-3 md:p-4">
-        <div className="max-w-3xl mx-auto grid grid-cols-5 gap-2">
-          {VOICES.map((v) => {
-            const has = !!tag.voiceTracks[v];
-            const active = mode === v && playing;
-            return (
-              <button
-                key={v}
-                onClick={() => (active ? stop() : setMode(v))}
-                disabled={!has}
-                className={`rounded-xl border-2 border-ink p-2 font-bold uppercase tracking-wider text-xs md:text-sm transition-all ${
-                  active
-                    ? `voice-${v} shadow-[3px_3px_0_0_#1a1410]`
-                    : has
-                      ? `voice-${v} opacity-70 hover:opacity-100`
-                      : 'bg-cream text-ink/30'
-                }`}
-              >
-                {active ? '■' : '▶'} {v}
-              </button>
-            );
-          })}
+      <div
+        ref={footerRef}
+        className="fixed bottom-0 left-0 right-0 border-t-4 border-ink bg-cream"
+      >
+        <div className="max-w-3xl mx-auto">
+          {pianoOpen ? (
+            <div className="px-3 md:px-4 pt-3">
+              <Piano writKey={tag.writKey} />
+            </div>
+          ) : null}
           <button
-            onClick={() => (mode === 'all' && playing ? stop() : setMode('all'))}
-            disabled={!tag.allParts}
-            className={`rounded-xl border-2 border-ink p-2 font-bold uppercase tracking-wider text-xs md:text-sm ${
-              mode === 'all' && playing
-                ? 'bg-ink text-cream shadow-[3px_3px_0_0_#1a1410]'
-                : tag.allParts
-                  ? 'bg-cream hover:bg-white'
-                  : 'bg-cream text-ink/30'
-            }`}
+            onClick={() => setPianoOpen((v) => !v)}
+            className="w-full text-[11px] font-semibold uppercase tracking-widest px-4 py-2 flex items-center justify-between hover:bg-white/40"
           >
-            {mode === 'all' && playing ? '■ All' : '▶ All'}
+            <span className="flex items-center gap-2">
+              <span>♪</span>
+              <span>
+                Note helper
+                {(() => {
+                  const k = parseWritKey(tag.writKey || '');
+                  return k ? ` · ${k.rootLabel} ${k.scaleName}` : '';
+                })()}
+              </span>
+            </span>
+            <span className="text-ink/50">{pianoOpen ? '▼ Hide' : '▲ Show'}</span>
           </button>
+          <div className="p-3 md:p-4 pt-0 grid grid-cols-5 gap-2">
+            {VOICES.map((v) => {
+              const has = !!tag.voiceTracks[v];
+              const active = mode === v && playing;
+              return (
+                <button
+                  key={v}
+                  onClick={() => (active ? stop() : setMode(v))}
+                  disabled={!has}
+                  className={`rounded-xl border-2 border-ink p-2 font-bold uppercase tracking-wider text-xs md:text-sm transition-all ${
+                    active
+                      ? `voice-${v} shadow-[3px_3px_0_0_#1a1410]`
+                      : has
+                        ? `voice-${v} opacity-70 hover:opacity-100`
+                        : 'bg-cream text-ink/30'
+                  }`}
+                >
+                  {active ? '■' : '▶'} {v}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => (mode === 'all' && playing ? stop() : setMode('all'))}
+              disabled={!tag.allParts}
+              className={`rounded-xl border-2 border-ink p-2 font-bold uppercase tracking-wider text-xs md:text-sm ${
+                mode === 'all' && playing
+                  ? 'bg-ink text-cream shadow-[3px_3px_0_0_#1a1410]'
+                  : tag.allParts
+                    ? 'bg-cream hover:bg-white'
+                    : 'bg-cream text-ink/30'
+              }`}
+            >
+              {mode === 'all' && playing ? '■ All' : '▶ All'}
+            </button>
+          </div>
         </div>
       </div>
     </main>

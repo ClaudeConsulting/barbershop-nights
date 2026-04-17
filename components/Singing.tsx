@@ -4,6 +4,7 @@ import type { Session, Participant, Voice, Tag } from '@/lib/types';
 import { VOICES } from '@/lib/types';
 import { Piano } from './Piano';
 import { SheetMusic } from './SheetMusic';
+import { parseWritKey } from '@/lib/piano-engine';
 
 type Api = {
   setPhase: (
@@ -37,6 +38,18 @@ export function Singing({
   type Mode = Voice | 'all' | null;
   const [mode, setMode] = useState<Mode>(null);
   const [playing, setPlaying] = useState(false);
+  const [pianoOpen, setPianoOpen] = useState(false);
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [footerHeight, setFooterHeight] = useState(128);
+
+  useEffect(() => {
+    const el = footerRef.current;
+    if (!el) return;
+    setFooterHeight(el.offsetHeight);
+    const ro = new ResizeObserver(() => setFooterHeight(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const byVoice = useMemo(() => {
     const m = new Map<Voice, Participant>();
@@ -103,7 +116,7 @@ export function Singing({
   }
 
   return (
-    <main className="min-h-dvh pb-32">
+    <main className="min-h-dvh" style={{ paddingBottom: footerHeight + 16 }}>
       <section
         className="px-4 md:px-6 py-6 border-b-4 border-ink"
         style={{ background: voiceColor, color: voiceFg }}
@@ -144,8 +157,6 @@ export function Singing({
           <SheetMusic tag={tag} />
         </div>
 
-        <Piano writKey={tag.writKey} />
-
         {tag.notes ? (
           <div className="card p-4">
             <p className="label">Notes</p>
@@ -175,24 +186,6 @@ export function Singing({
           </div>
         ) : null}
 
-        {tag.notationAlt || tag.notation ? (
-          <div className="card p-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="label">MuseScore file</p>
-              <p className="text-xs text-ink/60 mt-1">
-                Open in MuseScore to edit, transpose, or play back.
-              </p>
-            </div>
-            <a
-              className="btn-ghost whitespace-nowrap"
-              href={tag.notationAlt ?? tag.notation ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              ↓ .mscz
-            </a>
-          </div>
-        ) : null}
       </section>
 
       <audio
@@ -213,8 +206,34 @@ export function Singing({
         />
       ))}
 
-      <div className="fixed bottom-0 left-0 right-0 border-t-4 border-ink bg-cream p-3 md:p-4">
-        <div className="max-w-3xl mx-auto flex flex-col gap-2">
+      <div
+        ref={footerRef}
+        className="fixed bottom-0 left-0 right-0 border-t-4 border-ink bg-cream"
+      >
+        <div className="max-w-3xl mx-auto">
+          {pianoOpen ? (
+            <div className="px-3 md:px-4 pt-3">
+              <Piano writKey={tag.writKey} />
+            </div>
+          ) : null}
+          <button
+            onClick={() => setPianoOpen((v) => !v)}
+            className="w-full text-[11px] font-semibold uppercase tracking-widest px-4 py-2 flex items-center justify-between hover:bg-white/40"
+          >
+            <span className="flex items-center gap-2">
+              <span>♪</span>
+              <span>
+                Note helper
+                {(() => {
+                  const k = parseWritKey(tag.writKey || '');
+                  return k ? ` · ${k.rootLabel} ${k.scaleName}` : '';
+                })()}
+              </span>
+            </span>
+            <span className="text-ink/50">{pianoOpen ? '▼ Hide' : '▲ Show'}</span>
+          </button>
+        </div>
+        <div className="max-w-3xl mx-auto p-3 md:p-4 pt-0 flex flex-col gap-2">
           <div className="grid grid-cols-5 gap-2">
             {VOICES.map((v) => {
               const has = !!tag.voiceTracks[v];

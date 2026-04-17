@@ -94,21 +94,7 @@ export function Piano({ writKey }: { writKey: string }) {
   };
 
   return (
-    <div className="card p-3 flex flex-col gap-2">
-      <div className="flex items-baseline justify-between flex-wrap gap-2">
-        <p className="label">Note helper</p>
-        {parsed ? (
-          <p className="text-xs text-ink/70">
-            Key:{' '}
-            <span className="font-bold">
-              {parsed.rootLabel} {parsed.scaleName}
-            </span>
-          </p>
-        ) : (
-          <p className="text-xs text-ink/50 italic">No key info for this tag</p>
-        )}
-      </div>
-
+    <div className="flex flex-col gap-2">
       <div
         ref={containerRef}
         className="relative isolate w-full select-none touch-none"

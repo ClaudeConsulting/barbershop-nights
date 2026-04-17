@@ -21,31 +21,30 @@ export default function HomePage() {
           className="card w-full p-6 flex flex-col gap-4 animate-fade-up"
           style={{ animationDelay: '80ms' }}
         >
-          <p className="label text-center">Host a session</p>
-          <StartSessionButton />
+          <p className="label text-center">The songbook</p>
+          <a href="/solo" className="btn">
+            Browse tags
+          </a>
         </div>
 
         <div
-          className="card w-full p-6 flex flex-col gap-4 animate-fade-up"
+          className="w-full flex flex-col gap-4 animate-fade-up"
           style={{ animationDelay: '160ms' }}
         >
-          <p className="label text-center">Join with a code</p>
-          <JoinForm />
-        </div>
-
-        <div
-          className="card w-full p-6 flex flex-col gap-4 animate-fade-up"
-          style={{ animationDelay: '240ms' }}
-        >
-          <p className="label text-center">Explore on your own</p>
-          <a href="/solo" className="btn-ghost">
-            Browse tags solo
-          </a>
+          <p className="label text-center">Gather your crew</p>
+          <div className="card w-full p-6 flex flex-col gap-4">
+            <p className="label text-center">Host a session</p>
+            <StartSessionButton />
+          </div>
+          <div className="card w-full p-6 flex flex-col gap-4">
+            <p className="label text-center">Join with a code</p>
+            <JoinForm />
+          </div>
         </div>
 
         <p
           className="text-center text-xs text-ink/50 max-w-xs animate-fade-in"
-          style={{ animationDelay: '320ms' }}
+          style={{ animationDelay: '240ms' }}
         >
           Tags courtesy of{' '}
           <Link

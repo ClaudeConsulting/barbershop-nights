@@ -19,7 +19,7 @@ export function SoloTag({ tag }: { tag: Tag }) {
   type Mode = Voice | 'all' | null;
   const [mode, setMode] = useState<Mode>(null);
   const [playing, setPlaying] = useState(false);
-  const [pianoOpen, setPianoOpen] = useState(false);
+  const [pianoOpen, setPianoOpen] = useState(true);
   const footerRef = useRef<HTMLDivElement>(null);
   const [footerHeight, setFooterHeight] = useState(128);
 

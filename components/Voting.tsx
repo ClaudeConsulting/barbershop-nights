@@ -34,6 +34,8 @@ export function Voting({
   const [exhausted, setExhausted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestId = useRef(0);
+  const nextStartRef = useRef(1);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const fetchPage = useCallback(
     async (startAt: number, reset: boolean, thisSort: SortKey) => {
@@ -54,8 +56,9 @@ export function Voting({
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (myId !== requestId.current) return;
-        const incoming: Tag[] = (data.tags ?? []).filter(
-          (t: Tag) =>
+        const raw: Tag[] = data.tags ?? [];
+        const incoming = raw.filter(
+          (t) =>
             t.sheetMusic &&
             t.voiceTracks.Tenor &&
             t.voiceTracks.Lead &&
@@ -67,7 +70,8 @@ export function Voting({
           const seen = new Set<number>();
           return merged.filter((t) => (seen.has(t.id) ? false : (seen.add(t.id), true)));
         });
-        setExhausted(incoming.length < PAGE_SIZE);
+        nextStartRef.current = startAt + PAGE_SIZE;
+        setExhausted(raw.length < PAGE_SIZE);
       } catch (e) {
         if (myId === requestId.current) {
           setError(e instanceof Error ? e.message : 'fetch error');
@@ -85,13 +89,28 @@ export function Voting({
   useEffect(() => {
     setTags([]);
     setExhausted(false);
+    nextStartRef.current = 1;
     fetchPage(1, true, sort);
   }, [sort, fetchPage]);
 
-  const loadMore = () => {
+  const loadMoreRef = useRef<() => void>(() => {});
+  loadMoreRef.current = () => {
     if (loading || loadingMore || exhausted) return;
-    fetchPage(tags.length + 1, false, sort);
+    fetchPage(nextStartRef.current, false, sort);
   };
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMoreRef.current();
+      },
+      { rootMargin: '400px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const q = query.trim().toLowerCase();
   const matches = (t: Tag) =>
@@ -202,9 +221,9 @@ export function Voting({
             {loading ? ' · loading…' : null}
           </p>
           {error ? <p className="text-lead text-sm">{error}</p> : null}
-          {!loading && browseList.length === 0 && !error ? (
+          {!loading && browseList.length === 0 && !error && exhausted ? (
             <p className="text-ink/50 text-sm italic">
-              {q ? 'No matches in loaded tags — try "Load more" to search wider.' : 'No tags found.'}
+              {q ? 'No matches found.' : 'No tags found.'}
             </p>
           ) : null}
           <ul className="flex flex-col gap-2">
@@ -219,14 +238,15 @@ export function Voting({
               />
             ))}
           </ul>
-          {!exhausted && browseList.length > 0 ? (
-            <button
-              className="btn-ghost self-center mt-2"
-              onClick={loadMore}
-              disabled={loadingMore}
+          {!exhausted ? (
+            <div
+              ref={sentinelRef}
+              className="flex items-center justify-center py-6 text-ink/40 text-xs"
             >
-              {loadingMore ? 'Loading…' : 'Load more'}
-            </button>
+              {loadingMore ? 'Loading more…' : loading ? null : '·'}
+            </div>
+          ) : tags.length > 0 ? (
+            <p className="text-center text-ink/30 text-xs py-4">End of list</p>
           ) : null}
         </section>
       </div>

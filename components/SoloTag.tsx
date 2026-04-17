@@ -90,7 +90,7 @@ export function SoloTag({ tag }: { tag: Tag }) {
         {tag.notes ? (
           <div className="card p-4">
             <p className="label">Notes</p>
-            <p className="text-sm mt-1">{tag.notes}</p>
+            <p className="text-sm mt-1 break-words whitespace-pre-wrap">{tag.notes}</p>
           </div>
         ) : null}
 

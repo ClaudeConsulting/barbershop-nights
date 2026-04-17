@@ -1,12 +1,23 @@
 'use client';
 import { useEffect, useState } from 'react';
 import type { Tag } from '@/lib/types';
+import { PdfSheet } from './PdfSheet';
 
 export function SheetMusic({ tag }: { tag: Tag }) {
   const [failed, setFailed] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+
   useEffect(() => {
     setFailed(false);
   }, [tag.id]);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   const isPdf =
     tag.sheetMusicType === 'pdf' ||
@@ -39,6 +50,12 @@ export function SheetMusic({ tag }: { tag: Tag }) {
     .join(',')}`;
 
   if (isPdf) {
+    if (isMobile === null) {
+      return <div className="w-full min-h-[400px]" />;
+    }
+    if (isMobile) {
+      return <PdfSheet url={src} fallbackUrl={candidates[0]} />;
+    }
     return (
       <object
         data={src}
@@ -46,17 +63,7 @@ export function SheetMusic({ tag }: { tag: Tag }) {
         className="w-full rounded-lg"
         style={{ height: '80vh' }}
       >
-        <div className="p-6 text-center text-ink/50 flex flex-col gap-2">
-          <p>Your browser can&apos;t display this PDF inline.</p>
-          <a
-            className="btn-ghost self-center"
-            href={candidates[0]}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open PDF
-          </a>
-        </div>
+        <PdfSheet url={src} fallbackUrl={candidates[0]} />
       </object>
     );
   }

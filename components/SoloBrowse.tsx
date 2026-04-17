@@ -8,6 +8,7 @@ const PAGE_SIZE = 50;
 
 export function SoloBrowse() {
   const [query, setQuery] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');
   const [sort, setSort] = useState<SortKey>('Rating');
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(false);
@@ -18,8 +19,13 @@ export function SoloBrowse() {
   const nextStartRef = useRef(1);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(query.trim()), 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
   const fetchPage = useCallback(
-    async (startAt: number, reset: boolean, thisSort: SortKey) => {
+    async (startAt: number, reset: boolean, thisSort: SortKey, thisQ: string) => {
       const myId = ++requestId.current;
       if (reset) setLoading(true);
       else setLoadingMore(true);
@@ -33,6 +39,7 @@ export function SoloBrowse() {
           n: String(PAGE_SIZE),
           start: String(startAt),
         });
+        if (thisQ) params.set('q', thisQ);
         const res = await fetch(`/api/tags?${params.toString()}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -71,13 +78,13 @@ export function SoloBrowse() {
     setTags([]);
     setExhausted(false);
     nextStartRef.current = 1;
-    fetchPage(1, true, sort);
-  }, [sort, fetchPage]);
+    fetchPage(1, true, sort, debouncedQ);
+  }, [sort, debouncedQ, fetchPage]);
 
   const loadMoreRef = useRef<() => void>(() => {});
   loadMoreRef.current = () => {
     if (loading || loadingMore || exhausted) return;
-    fetchPage(nextStartRef.current, false, sort);
+    fetchPage(nextStartRef.current, false, sort, debouncedQ);
   };
 
   useEffect(() => {
@@ -93,14 +100,9 @@ export function SoloBrowse() {
     return () => observer.disconnect();
   }, []);
 
-  const q = query.trim().toLowerCase();
-  const matches = (t: Tag) =>
-    !q ||
-    t.title.toLowerCase().includes(q) ||
-    t.altTitle.toLowerCase().includes(q) ||
-    t.arranger.toLowerCase().includes(q);
-
-  const browseList = tags.filter(matches);
+  const q = debouncedQ;
+  const browseList = tags;
+  const pendingSearch = query.trim() !== debouncedQ;
 
   return (
     <main className="min-h-dvh p-4 md:p-6 pb-20">
@@ -141,8 +143,8 @@ export function SoloBrowse() {
 
         <section className="flex flex-col gap-2">
           <p className="label">
-            {q ? `Search: "${q}" · ${browseList.length} of ${tags.length}` : 'Browse'}
-            {loading ? ' · loading…' : null}
+            {q ? `Search: "${q}" · ${browseList.length}` : 'Browse'}
+            {loading || pendingSearch ? ' · loading…' : null}
           </p>
           {error ? <p className="text-lead text-sm">{error}</p> : null}
           {!loading && browseList.length === 0 && !error && exhausted ? (

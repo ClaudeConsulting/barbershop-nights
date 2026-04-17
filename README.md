@@ -84,4 +84,4 @@ lib/
 
 ## License
 
-No license chosen yet. Until one is added, all rights are reserved by the author.
+[MIT](LICENSE) © 2026 ClaudeConsulting

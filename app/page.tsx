@@ -27,6 +27,13 @@ export default function HomePage() {
           <JoinForm />
         </div>
 
+        <div className="card w-full p-6 flex flex-col gap-4">
+          <p className="label text-center">Explore on your own</p>
+          <a href="/solo" className="btn-ghost">
+            Browse tags solo
+          </a>
+        </div>
+
         <p className="text-center text-xs text-ink/50 max-w-xs">
           Tags courtesy of{' '}
           <Link

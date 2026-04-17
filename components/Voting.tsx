@@ -138,7 +138,7 @@ export function Voting({
   }
 
   return (
-    <main className="min-h-dvh p-4 md:p-6 pb-28">
+    <main className="min-h-dvh p-4 md:p-6 pb-40">
       <div className="max-w-3xl mx-auto flex flex-col gap-4">
         <header className="flex items-center justify-between">
           <div>
@@ -159,13 +159,13 @@ export function Voting({
             onChange={(e) => setQuery(e.target.value)}
             autoFocus={isHost}
           />
-          <div className="flex items-center gap-2 text-xs">
-            <span className="label">Sort</span>
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span className="label mr-1">Sort</span>
             {(['Rating', 'Downloaded', 'Posted', 'Title'] as SortKey[]).map((s) => (
               <button
                 key={s}
                 onClick={() => setSort(s)}
-                className={`px-3 py-1 rounded-full border-2 border-ink font-semibold uppercase tracking-widest ${
+                className={`px-2.5 py-1 rounded-full border-2 border-ink font-semibold uppercase tracking-wider ${
                   sort === s ? 'bg-ink text-cream' : 'bg-cream text-ink hover:bg-white'
                 }`}
               >

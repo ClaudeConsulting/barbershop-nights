@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Session, Participant, Voice, Tag } from '@/lib/types';
 import { VOICES } from '@/lib/types';
+import { Piano } from './Piano';
+import { SheetMusic } from './SheetMusic';
 
 type Api = {
   setPhase: (
@@ -32,7 +34,7 @@ export function Singing({
     Bari: null,
     Bass: null,
   });
-  type Mode = Voice | 'all' | 'minus' | null;
+  type Mode = Voice | 'all' | null;
   const [mode, setMode] = useState<Mode>(null);
   const [playing, setPlaying] = useState(false);
 
@@ -70,17 +72,10 @@ export function Singing({
     }
 
     allEl?.pause();
-    const activeVoices: Voice[] =
-      mode === 'minus' && myVoice
-        ? VOICES.filter((v) => v !== myVoice)
-        : mode === 'minus'
-          ? [...VOICES]
-          : [mode];
-
     for (const v of VOICES) {
       const el = voiceRefs.current[v];
       if (!el) continue;
-      if (activeVoices.includes(v)) {
+      if (v === mode) {
         el.currentTime = 0;
         el.play().catch(() => {});
       } else {
@@ -101,9 +96,6 @@ export function Singing({
 
   const voiceColor = voiceBg(myVoice);
   const voiceFg = myVoice === 'Tenor' ? '#1a1410' : '#f5ecd7';
-  const minusAvailable = VOICES.filter((v) => v !== myVoice).every(
-    (v) => !!tag.voiceTracks[v],
-  );
 
   function stop() {
     setMode(null);
@@ -111,7 +103,7 @@ export function Singing({
   }
 
   return (
-    <main className="min-h-dvh pb-40">
+    <main className="min-h-dvh pb-32">
       <section
         className="px-4 md:px-6 py-6 border-b-4 border-ink"
         style={{ background: voiceColor, color: voiceFg }}
@@ -151,6 +143,8 @@ export function Singing({
         <div className="card p-2 overflow-hidden bg-white">
           <SheetMusic tag={tag} />
         </div>
+
+        <Piano writKey={tag.writKey} />
 
         {tag.notes ? (
           <div className="card p-4">
@@ -258,22 +252,6 @@ export function Singing({
               {mode === 'all' && playing ? '■ All' : '▶ All'}
             </button>
           </div>
-          <button
-            onClick={() => (mode === 'minus' && playing ? stop() : setMode('minus'))}
-            disabled={!minusAvailable}
-            title={`Play everyone except ${myVoice} — sing your part along`}
-            className={`rounded-xl border-2 border-ink p-2 font-bold uppercase tracking-wider text-xs md:text-sm ${
-              mode === 'minus' && playing
-                ? 'bg-ink text-cream shadow-[3px_3px_0_0_#1a1410]'
-                : minusAvailable
-                  ? 'bg-cream hover:bg-white'
-                  : 'bg-cream text-ink/30'
-            }`}
-          >
-            {mode === 'minus' && playing
-              ? `■ Practice (everyone but ${myVoice})`
-              : `▶ Practice (everyone but ${myVoice})`}
-          </button>
           {isHost ? (
             <div className="flex gap-2 justify-end">
               <button
@@ -299,73 +277,4 @@ export function Singing({
 
 function voiceBg(v: Voice): string {
   return { Tenor: '#f4b942', Lead: '#e94b3c', Bari: '#4a9b8e', Bass: '#2c4a7c' }[v];
-}
-
-function SheetMusic({ tag }: { tag: Tag }) {
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    setFailed(false);
-  }, [tag.id]);
-
-  const isPdf =
-    tag.sheetMusicType === 'pdf' ||
-    (tag.sheetMusicAlt?.toLowerCase().endsWith('.pdf') ?? false);
-  const candidates = (isPdf
-    ? [tag.sheetMusic, tag.sheetMusicAlt]
-    : [tag.sheetMusicAlt, tag.sheetMusic]
-  ).filter((u): u is string => !!u);
-
-  if (candidates.length === 0 || failed) {
-    return (
-      <div className="p-6 text-center text-ink/50 flex flex-col gap-2">
-        <p>Sheet music unavailable inline.</p>
-        {candidates.length > 0 ? (
-          <a
-            className="btn-ghost self-center"
-            href={candidates[0]}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open on barbershoptags.com
-          </a>
-        ) : null}
-      </div>
-    );
-  }
-
-  const src = `/api/media?kind=sheet&urls=${candidates
-    .map((u) => encodeURIComponent(u))
-    .join(',')}`;
-
-  if (isPdf) {
-    return (
-      <object
-        data={src}
-        type="application/pdf"
-        className="w-full rounded-lg"
-        style={{ height: '80vh' }}
-      >
-        <div className="p-6 text-center text-ink/50 flex flex-col gap-2">
-          <p>Your browser can&apos;t display this PDF inline.</p>
-          <a
-            className="btn-ghost self-center"
-            href={candidates[0]}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open PDF
-          </a>
-        </div>
-      </object>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={`${tag.title} sheet music`}
-      className="w-full h-auto rounded-lg"
-      onError={() => setFailed(true)}
-    />
-  );
 }

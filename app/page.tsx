@@ -6,7 +6,7 @@ export default function HomePage() {
   return (
     <main className="min-h-dvh flex flex-col items-center justify-center p-6">
       <div className="max-w-md w-full flex flex-col items-center gap-10">
-        <header className="text-center">
+        <header className="text-center animate-fade-up">
           <div className="stripes h-3 w-32 mx-auto mb-6 rounded-full" />
           <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight text-ink leading-none">
             Barbershop
@@ -17,24 +17,36 @@ export default function HomePage() {
           </p>
         </header>
 
-        <div className="card w-full p-6 flex flex-col gap-4">
+        <div
+          className="card w-full p-6 flex flex-col gap-4 animate-fade-up"
+          style={{ animationDelay: '80ms' }}
+        >
           <p className="label text-center">Host a session</p>
           <StartSessionButton />
         </div>
 
-        <div className="card w-full p-6 flex flex-col gap-4">
+        <div
+          className="card w-full p-6 flex flex-col gap-4 animate-fade-up"
+          style={{ animationDelay: '160ms' }}
+        >
           <p className="label text-center">Join with a code</p>
           <JoinForm />
         </div>
 
-        <div className="card w-full p-6 flex flex-col gap-4">
+        <div
+          className="card w-full p-6 flex flex-col gap-4 animate-fade-up"
+          style={{ animationDelay: '240ms' }}
+        >
           <p className="label text-center">Explore on your own</p>
           <a href="/solo" className="btn-ghost">
             Browse tags solo
           </a>
         </div>
 
-        <p className="text-center text-xs text-ink/50 max-w-xs">
+        <p
+          className="text-center text-xs text-ink/50 max-w-xs animate-fade-in"
+          style={{ animationDelay: '320ms' }}
+        >
           Tags courtesy of{' '}
           <Link
             href="https://www.barbershoptags.com/"

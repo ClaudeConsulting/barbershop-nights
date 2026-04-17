@@ -81,7 +81,7 @@ export function Lobby({
   }
 
   return (
-    <main className="min-h-dvh p-4 md:p-6">
+    <main className="min-h-dvh p-4 md:p-6 animate-fade-up">
       <div className="max-w-2xl mx-auto flex flex-col gap-6">
         <header className="flex items-center justify-between">
           <div>

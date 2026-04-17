@@ -77,7 +77,7 @@ export function SoloTag({ tag }: { tag: Tag }) {
 
   return (
     <main className="min-h-dvh" style={{ paddingBottom: footerHeight + 16 }}>
-      <section className="px-4 md:px-6 py-6 border-b-4 border-ink bg-cream">
+      <section className="px-4 md:px-6 py-6 border-b-4 border-ink bg-cream animate-fade-in">
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
           <a href="/solo" className="btn-ghost text-xs px-3 py-2">
             ← Back
@@ -94,26 +94,38 @@ export function SoloTag({ tag }: { tag: Tag }) {
       </section>
 
       <section className="max-w-3xl mx-auto p-4 md:p-6 flex flex-col gap-4">
-        <div className="card p-2 overflow-hidden bg-white">
+        <div
+          className="card p-2 overflow-hidden bg-white animate-fade-up"
+          style={{ animationDelay: '60ms' }}
+        >
           <SheetMusic tag={tag} />
         </div>
 
         {tag.notes ? (
-          <div className="card p-4">
+          <div
+            className="card p-4 animate-fade-up"
+            style={{ animationDelay: '140ms' }}
+          >
             <p className="label">Notes</p>
             <p className="text-sm mt-1 break-words whitespace-pre-wrap">{tag.notes}</p>
           </div>
         ) : null}
 
         {tag.lyrics ? (
-          <div className="card p-4">
+          <div
+            className="card p-4 animate-fade-up"
+            style={{ animationDelay: '200ms' }}
+          >
             <p className="label">Lyrics</p>
             <p className="text-sm mt-1 whitespace-pre-wrap">{tag.lyrics}</p>
           </div>
         ) : null}
 
         {tag.videoCode ? (
-          <div className="card p-2 overflow-hidden">
+          <div
+            className="card p-2 overflow-hidden animate-fade-up"
+            style={{ animationDelay: '260ms' }}
+          >
             <p className="label px-2 pt-2">Demo</p>
             <div className="aspect-video mt-2 rounded-lg overflow-hidden border-2 border-ink">
               <iframe
@@ -149,14 +161,19 @@ export function SoloTag({ tag }: { tag: Tag }) {
 
       <div
         ref={footerRef}
-        className="fixed bottom-0 left-0 right-0 border-t-4 border-ink bg-cream"
+        className="fixed bottom-0 left-0 right-0 border-t-4 border-ink bg-cream animate-slide-up"
       >
         <div className="max-w-3xl mx-auto">
-          {pianoOpen ? (
-            <div className="px-3 md:px-4 pt-3">
-              <Piano writKey={tag.writKey} />
+          <div
+            className="grid transition-[grid-template-rows] duration-300 ease-out"
+            style={{ gridTemplateRows: pianoOpen ? '1fr' : '0fr' }}
+          >
+            <div className="overflow-hidden">
+              <div className="px-3 md:px-4 pt-3">
+                <Piano writKey={tag.writKey} />
+              </div>
             </div>
-          ) : null}
+          </div>
           <button
             onClick={() => setPianoOpen((v) => !v)}
             className="w-full text-[11px] font-semibold uppercase tracking-widest px-4 py-2 flex items-center justify-between hover:bg-white/40"
@@ -171,7 +188,15 @@ export function SoloTag({ tag }: { tag: Tag }) {
                 })()}
               </span>
             </span>
-            <span className="text-ink/50">{pianoOpen ? '▼ Hide' : '▲ Show'}</span>
+            <span className="text-ink/50 flex items-center gap-1">
+              <span
+                className="inline-block transition-transform duration-300"
+                style={{ transform: pianoOpen ? 'rotate(0deg)' : 'rotate(180deg)' }}
+              >
+                ▼
+              </span>
+              {pianoOpen ? 'Hide' : 'Show'}
+            </span>
           </button>
           <div className="p-3 md:p-4 pt-0 grid grid-cols-5 gap-2">
             {VOICES.map((v) => {

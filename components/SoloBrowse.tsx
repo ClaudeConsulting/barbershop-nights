@@ -107,7 +107,7 @@ export function SoloBrowse() {
   return (
     <main className="min-h-dvh p-4 md:p-6 pb-20">
       <div className="max-w-3xl mx-auto flex flex-col gap-4">
-        <header className="flex items-center justify-between gap-3">
+        <header className="flex items-center justify-between gap-3 animate-fade-up">
           <div>
             <p className="label">Solo</p>
             <p className="font-display text-3xl font-bold">Browse tags</p>
@@ -117,7 +117,7 @@ export function SoloBrowse() {
           </a>
         </header>
 
-        <div className="card p-3 flex flex-col gap-2">
+        <div className="card p-3 flex flex-col gap-2 animate-fade-up" style={{ animationDelay: '60ms' }}>
           <input
             className="w-full rounded-full border-2 border-ink bg-cream px-4 py-3 outline-none focus:bg-white"
             type="search"
@@ -153,11 +153,15 @@ export function SoloBrowse() {
             </p>
           ) : null}
           <ul className="flex flex-col gap-2">
-            {browseList.map((tag) => (
-              <li key={tag.id}>
+            {browseList.map((tag, i) => (
+              <li
+                key={tag.id}
+                className="animate-fade-up"
+                style={{ animationDelay: `${Math.min(i, 12) * 25}ms` }}
+              >
                 <a
                   href={`/solo/tag/${tag.id}`}
-                  className="card w-full p-3 text-left flex items-center gap-3 transition-transform hover:-translate-y-0.5"
+                  className="card w-full p-3 text-left flex items-center gap-3 hover:-translate-y-0.5"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2">

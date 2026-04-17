@@ -116,7 +116,7 @@ export function Singing({
   }
 
   return (
-    <main className="min-h-dvh" style={{ paddingBottom: footerHeight + 16 }}>
+    <main className="min-h-dvh animate-fade-up" style={{ paddingBottom: footerHeight + 16 }}>
       <section
         className="px-4 md:px-6 py-6 border-b-4 border-ink"
         style={{ background: voiceColor, color: voiceFg }}
@@ -211,11 +211,16 @@ export function Singing({
         className="fixed bottom-0 left-0 right-0 border-t-4 border-ink bg-cream"
       >
         <div className="max-w-3xl mx-auto">
-          {pianoOpen ? (
-            <div className="px-3 md:px-4 pt-3">
-              <Piano writKey={tag.writKey} />
+          <div
+            className="grid transition-[grid-template-rows] duration-300 ease-out"
+            style={{ gridTemplateRows: pianoOpen ? '1fr' : '0fr' }}
+          >
+            <div className="overflow-hidden">
+              <div className="px-3 md:px-4 pt-3">
+                <Piano writKey={tag.writKey} />
+              </div>
             </div>
-          ) : null}
+          </div>
           <button
             onClick={() => setPianoOpen((v) => !v)}
             className="w-full text-[11px] font-semibold uppercase tracking-widest px-4 py-2 flex items-center justify-between hover:bg-white/40"
@@ -230,7 +235,15 @@ export function Singing({
                 })()}
               </span>
             </span>
-            <span className="text-ink/50">{pianoOpen ? '▼ Hide' : '▲ Show'}</span>
+            <span className="text-ink/50 flex items-center gap-1">
+              <span
+                className="inline-block transition-transform duration-300"
+                style={{ transform: pianoOpen ? 'rotate(0deg)' : 'rotate(180deg)' }}
+              >
+                ▼
+              </span>
+              {pianoOpen ? 'Hide' : 'Show'}
+            </span>
           </button>
         </div>
         <div className="max-w-3xl mx-auto p-3 md:p-4 pt-0 flex flex-col gap-2">

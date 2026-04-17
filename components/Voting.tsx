@@ -160,7 +160,7 @@ export function Voting({
   }
 
   return (
-    <main className="min-h-dvh p-4 md:p-6 pb-40">
+    <main className="min-h-dvh p-4 md:p-6 pb-40 animate-fade-up">
       <div className="max-w-3xl mx-auto flex flex-col gap-4">
         <header className="flex items-center justify-between">
           <div>

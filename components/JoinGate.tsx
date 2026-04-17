@@ -31,7 +31,7 @@ export function JoinGate({
   }
 
   return (
-    <main className="min-h-dvh flex flex-col items-center justify-center p-6">
+    <main className="min-h-dvh flex flex-col items-center justify-center p-6 animate-fade-up">
       <div className="w-full max-w-md flex flex-col gap-6">
         <header className="text-center">
           <p className="label">Joining session</p>

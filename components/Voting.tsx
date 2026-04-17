@@ -36,7 +36,6 @@ export function Voting({
   const [error, setError] = useState<string | null>(null);
   const requestId = useRef(0);
   const nextStartRef = useRef(1);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(query.trim()), 300);
@@ -100,24 +99,11 @@ export function Voting({
     fetchPage(1, true, sort, debouncedQ);
   }, [sort, debouncedQ, fetchPage]);
 
-  const loadMoreRef = useRef<() => void>(() => {});
-  loadMoreRef.current = () => {
-    if (loading || loadingMore || exhausted) return;
+  const canLoadMore = !loading && !loadingMore && !exhausted;
+  const loadMore = () => {
+    if (!canLoadMore) return;
     fetchPage(nextStartRef.current, false, sort, debouncedQ);
   };
-
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) loadMoreRef.current();
-      },
-      { rootMargin: '400px' },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   const q = debouncedQ;
   const pendingSearch = query.trim() !== debouncedQ;
@@ -241,14 +227,16 @@ export function Voting({
               />
             ))}
           </ul>
-          {!exhausted ? (
-            <div
-              ref={sentinelRef}
-              className="flex items-center justify-center py-6 text-ink/40 text-xs"
+          {!exhausted && browseList.length > 0 ? (
+            <button
+              type="button"
+              onClick={loadMore}
+              disabled={!canLoadMore}
+              className="w-full text-center py-3 text-ink/60 text-sm font-semibold uppercase tracking-wider hover:text-ink disabled:opacity-50"
             >
-              {loadingMore ? 'Loading more…' : loading ? null : '·'}
-            </div>
-          ) : tags.length > 0 ? (
+              {loadingMore ? 'Loading more…' : 'Load more tags'}
+            </button>
+          ) : exhausted && tags.length > 0 ? (
             <p className="text-center text-ink/30 text-xs py-4">End of list</p>
           ) : null}
         </section>

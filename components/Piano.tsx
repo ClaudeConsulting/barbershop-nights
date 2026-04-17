@@ -111,7 +111,7 @@ export function Piano({ writKey }: { writKey: string }) {
 
       <div
         ref={containerRef}
-        className="relative w-full select-none touch-none"
+        className="relative isolate w-full select-none touch-none"
         style={{ height: whiteH }}
       >
         {whiteW > 0 &&

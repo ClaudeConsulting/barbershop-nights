@@ -43,6 +43,12 @@ export function Singing({
   const [footerHeight, setFooterHeight] = useState(128);
 
   useEffect(() => {
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setPianoOpen(false);
+    }
+  }, []);
+
+  useEffect(() => {
     const el = footerRef.current;
     if (!el) return;
     setFooterHeight(el.offsetHeight);

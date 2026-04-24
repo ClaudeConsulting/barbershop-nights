@@ -42,22 +42,19 @@ export default function HomePage() {
           </div>
         </div>
 
-        <footer
-          className="text-center text-xs text-ink/50 max-w-xs animate-fade-in flex flex-col gap-2"
+        <p
+          className="text-center text-xs text-ink/50 max-w-xs animate-fade-in"
           style={{ animationDelay: '240ms' }}
         >
-          <p>Hello Christophe</p>
-          <p>
-            Tags courtesy of{' '}
-            <Link
-              href="https://www.barbershoptags.com/"
-              target="_blank"
-              className="underline"
-            >
-              barbershoptags.com
-            </Link>
-          </p>
-        </footer>
+          Tags courtesy of{' '}
+          <Link
+            href="https://www.barbershoptags.com/"
+            target="_blank"
+            className="underline"
+          >
+            barbershoptags.com
+          </Link>
+        </p>
       </div>
     </main>
   );

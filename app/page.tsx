@@ -1,9 +1,6 @@
 import Link from 'next/link';
-import { Great_Vibes } from 'next/font/google';
 import { StartSessionButton } from '@/components/StartSessionButton';
 import { JoinForm } from '@/components/JoinForm';
-
-const greatVibes = Great_Vibes({ weight: '400', subsets: ['latin'] });
 
 export default function HomePage() {
   return (
@@ -58,22 +55,6 @@ export default function HomePage() {
             barbershoptags.com
           </Link>
         </p>
-
-        <footer
-          className="flex flex-col items-center gap-4 animate-fade-up"
-          style={{ animationDelay: '320ms' }}
-        >
-          <div className="flex items-center gap-3 text-ink/40" aria-hidden="true">
-            <span className="h-px w-12 bg-ink/25" />
-            <span className="text-base leading-none">❦</span>
-            <span className="h-px w-12 bg-ink/25" />
-          </div>
-          <p
-            className={`${greatVibes.className} greeting-script -rotate-2 text-5xl md:text-6xl text-ink leading-tight px-4`}
-          >
-            Hello Omar
-          </p>
-        </footer>
       </div>
     </main>
   );

@@ -44,12 +44,6 @@ body {
   }
 }
 
-.greeting-script {
-  text-shadow:
-    1px 1px 0 rgba(255, 255, 255, 0.6),
-    3px 4px 8px rgba(26, 20, 16, 0.18);
-}
-
 .stripes {
   background-image: repeating-linear-gradient(
     45deg,

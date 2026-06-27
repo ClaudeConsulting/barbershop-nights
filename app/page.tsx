@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { StartSessionButton } from '@/components/StartSessionButton';
 import { JoinForm } from '@/components/JoinForm';
+import { FavoriteTags } from '@/components/FavoriteTags';
 
 export default function HomePage() {
   return (
@@ -25,6 +26,7 @@ export default function HomePage() {
           <a href="/solo" className="btn">
             Browse tags
           </a>
+          <FavoriteTags />
         </div>
 
         <div

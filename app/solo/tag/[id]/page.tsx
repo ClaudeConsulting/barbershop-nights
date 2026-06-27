@@ -1,5 +1,12 @@
 import { fetchTagById } from '@/lib/tags-api';
+import { getFavoriteTag, FAVORITE_TAG_IDS } from '@/lib/favorite-tags';
 import { SoloTag } from '@/components/SoloTag';
+
+// Prerender the baked-in favorites at build time so they're served statically
+// (no API, no per-request render). Other ids still render on demand.
+export function generateStaticParams() {
+  return [...FAVORITE_TAG_IDS].map((id) => ({ id: String(id) }));
+}
 
 export default async function SoloTagPage({
   params,
@@ -16,7 +23,9 @@ export default async function SoloTagPage({
     );
   }
 
-  const tag = await fetchTagById(tagId);
+  // Favorites are baked into the app, so they resolve instantly without
+  // hitting the slow barbershoptags.com API.
+  const tag = getFavoriteTag(tagId) ?? (await fetchTagById(tagId));
   if (!tag) {
     return (
       <main className="min-h-dvh flex flex-col items-center justify-center gap-4 p-6">

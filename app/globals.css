@@ -110,4 +110,9 @@ body {
   .wobble {
     animation: none;
   }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
 }

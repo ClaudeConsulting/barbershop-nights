@@ -156,7 +156,9 @@ export async function fetchTags(query: FetchTagsQuery): Promise<Tag[]> {
 
 export async function fetchTagById(id: number): Promise<Tag | null> {
   const params = new URLSearchParams({ id: String(id), client: 'barbershop-night' });
-  const res = await fetch(`${BASE}?${params.toString()}`);
+  const res = await fetch(`${BASE}?${params.toString()}`, {
+    next: { revalidate: 86400 },
+  });
   if (!res.ok) return null;
   const xml = await res.text();
   const parsed = parser.parse(xml);

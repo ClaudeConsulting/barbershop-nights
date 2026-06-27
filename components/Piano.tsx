@@ -71,7 +71,9 @@ export function Piano({ writKey }: { writKey: string }) {
   }
 
   const whiteW = width > 0 ? width / whites.length : 0;
-  const whiteH = Math.min(Math.max(whiteW * 3.8, 90), 150);
+  // Shorter keys on narrow (mobile) layouts so the fixed bottom bar stays
+  // compact; wider screens keep the taller, easier-to-tap keys (capped).
+  const whiteH = Math.min(Math.max(whiteW * 2.9, 70), 150);
   const blackW = whiteW * 0.6;
   const blackH = whiteH * 0.62;
 

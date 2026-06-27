@@ -19,14 +19,30 @@ export function SoloTag({ tag }: { tag: Tag }) {
   type Mode = Voice | 'all' | null;
   const [mode, setMode] = useState<Mode>(null);
   const [playing, setPlaying] = useState(false);
-  const [pianoOpen, setPianoOpen] = useState(true);
+  const [pianoOpen, setPianoOpen] = useState(false);
   const footerRef = useRef<HTMLDivElement>(null);
   const [footerHeight, setFooterHeight] = useState(128);
+  const pianoRef = useRef<HTMLDivElement>(null);
+  const [pianoHeight, setPianoHeight] = useState(0);
 
+  // Open the note helper by default on wider screens, but keep it collapsed on
+  // mobile so the fixed bottom bar doesn't swallow the viewport.
   useEffect(() => {
-    if (window.matchMedia('(max-width: 767px)').matches) {
-      setPianoOpen(false);
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      setPianoOpen(true);
     }
+  }, []);
+
+  // Measure the piano so the toggle animates to an exact height and reliably
+  // collapses to 0 (the grid 0fr/1fr collapse froze open on mobile here).
+  useEffect(() => {
+    const el = pianoRef.current;
+    if (!el) return;
+    const measure = () => setPianoHeight(el.scrollHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
@@ -171,21 +187,23 @@ export function SoloTag({ tag }: { tag: Tag }) {
       >
         <div className="max-w-3xl mx-auto">
           <div
-            className="grid transition-[grid-template-rows] duration-300 ease-out"
-            style={{ gridTemplateRows: pianoOpen ? '1fr' : '0fr' }}
+            id="note-helper-panel"
+            inert={!pianoOpen}
+            className="overflow-hidden transition-[max-height] duration-300 ease-out"
+            style={{ maxHeight: pianoOpen ? pianoHeight || 600 : 0 }}
           >
-            <div className="overflow-hidden">
-              <div className="px-3 md:px-4 pt-3">
-                <Piano writKey={tag.writKey} />
-              </div>
+            <div ref={pianoRef} className="px-3 md:px-4 pt-3">
+              <Piano writKey={tag.writKey} />
             </div>
           </div>
           <button
             onClick={() => setPianoOpen((v) => !v)}
-            className="w-full text-[11px] font-semibold uppercase tracking-widest px-4 py-2 flex items-center justify-between hover:bg-white/40"
+            aria-expanded={pianoOpen}
+            aria-controls="note-helper-panel"
+            className="w-full text-xs font-semibold uppercase tracking-widest px-4 py-3 flex items-center justify-between hover:bg-white/40 active:bg-white/60 transition-colors"
           >
             <span className="flex items-center gap-2">
-              <span>♪</span>
+              <span aria-hidden="true">♪</span>
               <span>
                 Note helper
                 {(() => {
@@ -194,14 +212,14 @@ export function SoloTag({ tag }: { tag: Tag }) {
                 })()}
               </span>
             </span>
-            <span className="text-ink/50 flex items-center gap-1">
+            <span className="text-ink/60 flex items-center gap-1.5">
+              {pianoOpen ? 'Hide' : 'Show'}
               <span
                 className="inline-block transition-transform duration-300"
                 style={{ transform: pianoOpen ? 'rotate(0deg)' : 'rotate(180deg)' }}
               >
                 ▼
               </span>
-              {pianoOpen ? 'Hide' : 'Show'}
             </span>
           </button>
           <div className="p-3 md:p-4 pt-0 grid grid-cols-5 gap-2">
